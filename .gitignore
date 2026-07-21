@@ -10,3 +10,4 @@ gui/release
 notify.env
 .DS_Store
 ._*
+/.cargo/config.toml
