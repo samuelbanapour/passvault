@@ -1,0 +1,22 @@
+[package]
+name = "passvault"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "A portable, cross-platform encrypted password manager (CLI)"
+
+[[bin]]
+name = "passvault"
+path = "src/main.rs"
+
+[dependencies]
+passvault-core = { path = "../core" }
+passvault-otp = { path = "../otp" }
+clap = { version = "4", features = ["derive"] }
+rpassword = "7"
+arboard = "3"
+uuid = { version = "1", features = ["v4"] }
+directories = "5"
+comfy-table = "7"
+anyhow = "1"

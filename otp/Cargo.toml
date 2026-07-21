@@ -1,0 +1,21 @@
+[package]
+name = "passvault-otp"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rand = "0.8"
+sha2 = "0.10"
+base32 = "0.5"
+uuid = { version = "1", features = ["v4", "serde"] }
+subtle = "2"
+thiserror = "1"
+time = { version = "0.3", features = ["serde"] }
+keyring = "4"
+directories = "5"
+lettre = { version = "0.11", default-features = false, features = ["smtp-transport", "rustls-tls", "hostname", "builder"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "blocking", "rustls-tls"] }

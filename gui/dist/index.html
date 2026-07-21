@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PassVault</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Unlock / create screen — content is rendered dynamically by app.js
+       depending on whether a vault exists yet and how it's protected
+       (master password vs. emailed login code). -->
+  <section id="screen-lock" class="screen">
+    <div class="lock-card" id="lock-card">
+    </div>
+  </section>
+
+  <!-- Main vault view -->
+  <section id="screen-vault" class="screen hidden">
+    <aside class="sidebar">
+      <div class="brand small">
+        <div class="brand-mark">🔒</div>
+        <h1>PassVault</h1>
+      </div>
+      <input id="search" type="search" placeholder="Search entries…" />
+      <button id="btn-new-entry" class="primary">+ New entry</button>
+      <div id="entry-list" class="entry-list"></div>
+      <div class="sidebar-footer">
+        <button id="btn-import" class="ghost">Import passwords…</button>
+        <button id="btn-generator" class="ghost">Generator</button>
+        <button id="btn-change-password" class="ghost hidden">Change master password</button>
+        <button id="btn-disable-otp" class="ghost hidden">Turn off code login</button>
+        <button id="btn-lock" class="ghost">Lock vault</button>
+        <button id="btn-delete-vault" class="danger">Delete vault…</button>
+      </div>
+    </aside>
+
+    <main id="detail" class="detail">
+      <div class="empty-state">Select an entry, or create a new one.</div>
+    </main>
+  </section>
+
+  <!-- Generator modal -->
+  <div id="modal-generator" class="modal-overlay hidden">
+    <div class="modal">
+      <h2>Password generator</h2>
+      <div class="gen-output-row">
+        <input id="gen-output" type="text" readonly />
+        <button id="gen-copy" class="ghost">Copy</button>
+        <button id="gen-refresh" class="ghost">↻</button>
+      </div>
+      <p id="gen-strength" class="muted"></p>
+
+      <label class="range-row">
+        Length: <span id="gen-length-value">20</span>
+        <input id="gen-length" type="range" min="4" max="64" value="20" />
+      </label>
+      <label><input type="checkbox" id="gen-lowercase" checked /> Lowercase (a-z)</label>
+      <label><input type="checkbox" id="gen-uppercase" checked /> Uppercase (A-Z)</label>
+      <label><input type="checkbox" id="gen-digits" checked /> Digits (0-9)</label>
+      <label><input type="checkbox" id="gen-symbols" checked /> Symbols (!@#…)</label>
+      <label><input type="checkbox" id="gen-ambiguous" /> Exclude ambiguous characters</label>
+
+      <div class="modal-actions">
+        <button id="gen-use" class="primary">Use in entry</button>
+        <button id="gen-close" class="ghost">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change master password modal -->
+  <div id="modal-passwd" class="modal-overlay hidden">
+    <div class="modal">
+      <h2>Change master password</h2>
+      <input id="passwd-old" type="password" placeholder="Current master password" />
+      <input id="passwd-new" type="password" placeholder="New master password" />
+      <input id="passwd-confirm" type="password" placeholder="Confirm new master password" />
+      <p id="passwd-error" class="error hidden"></p>
+      <div class="modal-actions">
+        <button id="passwd-submit" class="primary">Change password</button>
+        <button id="passwd-close" class="ghost">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Turn off code login modal -->
+  <div id="modal-disable-otp" class="modal-overlay hidden">
+    <div class="modal">
+      <h2>Turn off code login</h2>
+      <p class="muted">Switch this vault back to a master password. You'll need it every time you unlock from now on — write it down somewhere safe.</p>
+      <input id="disable-otp-new" type="password" placeholder="New master password" />
+      <input id="disable-otp-confirm" type="password" placeholder="Confirm new master password" />
+      <p id="disable-otp-error" class="error hidden"></p>
+      <div class="modal-actions">
+        <button id="disable-otp-submit" class="primary">Switch to master password</button>
+        <button id="disable-otp-close" class="ghost">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete vault modal — content rendered dynamically by app.js since it
+       depends on the vault's login mode (master password vs. OTP) and a
+       two-stage confirm-then-authenticate flow. -->
+  <div id="modal-delete-vault" class="modal-overlay hidden">
+    <div class="modal" id="delete-vault-modal-content"></div>
+  </div>
+
+  <!-- Import passwords modal — content rendered dynamically: file picker
+       first, then a preview (title/username only, never passwords) once
+       a file's been chosen and parsed. -->
+  <div id="modal-import" class="modal-overlay hidden">
+    <div class="modal" id="import-modal-content"></div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

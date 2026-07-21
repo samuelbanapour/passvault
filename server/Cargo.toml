@@ -1,0 +1,27 @@
+[package]
+name = "passvault-keyserver"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Key-custody server for PassVault's portable OTP login mode"
+
+[[bin]]
+name = "passvault-keyserver"
+path = "src/main.rs"
+
+[dependencies]
+passvault-otp = { path = "../otp" }
+axum = { version = "0.8", features = ["json"] }
+tokio = { version = "1", features = ["rt-multi-thread", "net", "macros", "signal"] }
+tower-http = { version = "0.6", features = ["trace"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+rusqlite = { version = "0.31", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4"] }
+time = "0.3"
+chacha20poly1305 = "0.10"
+rand = "0.8"
+base64 = "0.22"

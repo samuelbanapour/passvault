@@ -1,0 +1,21 @@
+[workspace]
+resolver = "2"
+members = [
+    "core",
+    "otp",
+    "cli",
+    "gui/src-tauri",
+    "server",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Solo Apps Studio"]
+license = "MIT"
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true
+codegen-units = 1

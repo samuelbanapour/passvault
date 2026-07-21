@@ -1,0 +1,12 @@
+/target
+/tmp
+**/target
+gui/src-tauri/gen
+gui/release
+*.pvault
+*.pvault.otp.json
+*.sqlite
+*.sqlite-*
+notify.env
+.DS_Store
+._*
