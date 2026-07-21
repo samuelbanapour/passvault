@@ -1,0 +1,90 @@
+# CI    — every push/PR to main: cargo check across the workspace.
+# Release — every pushed tag matching v* (git tag v0.1.0 && git push origin v0.1.0):
+#           builds the CLI, key-custody server, and Tauri GUI installer for
+#           Windows and Linux (macOS is built and published locally on Apple
+#           Silicon — see README). This exists because the GitHub Actions
+#           release workflow (.github/workflows/release.yml) is blocked by
+#           this account's Actions spending limit; once that's raised, that
+#           workflow covers all three platforms and this one becomes
+#           redundant for CI purposes, but is fine to keep as a fallback.
+
+trigger:
+  branches:
+    include: [main]
+  tags:
+    include: ["v*"]
+
+pr:
+  branches:
+    include: [main]
+
+stages:
+  - stage: CI
+    condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
+    jobs:
+      - job: check
+        pool: { vmImage: "ubuntu-latest" }
+        steps:
+          - bash: |
+              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+              echo "##vso[task.prependpath]$HOME/.cargo/bin"
+            displayName: Install Rust
+          - bash: cargo check --workspace
+            displayName: cargo check
+
+  - stage: Release
+    condition: startsWith(variables['Build.SourceBranch'], 'refs/tags/v')
+    jobs:
+      - job: desktop
+        strategy:
+          matrix:
+            Windows:
+              vmImageName: windows-latest
+            Linux:
+              vmImageName: ubuntu-latest
+        pool: { vmImage: $(vmImageName) }
+        steps:
+          - checkout: self
+
+          - bash: |
+              sudo apt-get update
+              sudo apt-get install -y \
+                libwebkit2gtk-4.1-dev libayatana-appindicator3-dev \
+                librsvg2-dev patchelf build-essential curl wget file \
+                libssl-dev libgtk-3-dev libsqlite3-dev
+            displayName: Install Tauri Linux system deps
+            condition: eq(variables['Agent.OS'], 'Linux')
+
+          - bash: |
+              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+              echo "##vso[task.prependpath]$HOME/.cargo/bin"
+            displayName: Install Rust
+            condition: ne(variables['Agent.OS'], 'Windows_NT')
+          - pwsh: |
+              curl --proto "=https" --tlsv1.2 -sSf -o rustup-init.exe https://win.rustup.rs/x86_64
+              .\rustup-init.exe -y --default-toolchain stable
+              Write-Host "##vso[task.prependpath]$env:USERPROFILE\.cargo\bin"
+            displayName: Install Rust (Windows)
+            condition: eq(variables['Agent.OS'], 'Windows_NT')
+
+          - bash: cargo build --release -p passvault -p passvault-keyserver
+            displayName: Build CLI + key-custody server
+
+          - bash: cargo install tauri-cli --version "^2.0.0" --locked
+            displayName: Install tauri-cli
+
+          - bash: cargo tauri build
+            displayName: Build GUI installer
+            workingDirectory: gui
+
+          - bash: |
+              mkdir -p "$(Build.ArtifactStagingDirectory)/desktop"
+              find target/release -maxdepth 1 -type f \( -name 'passvault' -o -name 'passvault.exe' -o -name 'passvault-keyserver' -o -name 'passvault-keyserver.exe' \) \
+                -exec cp {} "$(Build.ArtifactStagingDirectory)/desktop/" \;
+              find target/release/bundle -type f \( -iname '*.exe' -o -iname '*.msi' -o -iname '*.deb' -o -iname '*.rpm' -o -iname '*.AppImage' \) \
+                -exec cp {} "$(Build.ArtifactStagingDirectory)/desktop/" \;
+              ls -la "$(Build.ArtifactStagingDirectory)/desktop"
+            displayName: Collect artifacts
+
+          - publish: $(Build.ArtifactStagingDirectory)/desktop
+            artifact: passvault-$(Agent.OS)
